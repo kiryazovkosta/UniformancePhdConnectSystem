@@ -59,13 +59,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enums\PhdReductionType.cs" />
+    <Compile Include="Enums\PhdSampleType.cs" />
+    <Compile Include="Enums\PhdServerVersionType.cs" />
     <Compile Include="Identity\ApplicationUser.cs" />
+    <Compile Include="Phd\DbInfoData.cs" />
+    <Compile Include="Phd\FetchUniformancePhdData.cs" />
+    <Compile Include="Phd\FetchUniformancePhdDataRecord.cs" />
+    <Compile Include="Phd\PHDHistorianModel.cs" />
+    <Compile Include="Phd\PHDServerModel.cs" />
+    <Compile Include="Phd\PutUniformancePhdData.cs" />
+    <Compile Include="Phd\PutUniformancePhdDataRecord.cs" />
+    <Compile Include="Phd\TagData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

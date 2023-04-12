@@ -1,10 +1,8 @@
 ﻿using Newtonsoft.Json.Serialization;
 using Owin;
-using System;
-using System.Collections.Generic;
+using Serilog;
 using System.Linq;
 using System.Net.Http.Formatting;
-using System.Web;
 using System.Web.Http;
 using UniformancePhdConnectSystem.Data;
 using UniformancePhdConnectSystem.WebApi.Data;
@@ -15,11 +13,17 @@ namespace UniformancePhdConnectSystem.WebApi
     {
         public void Configuration(IAppBuilder app)
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .ReadFrom.AppSettings()
+                .CreateLogger();
+
             var httpConfig = new HttpConfiguration();
             ConfigureOAuthTokenGeneration(app);
             ConfigureWebApi(httpConfig);
             app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
             app.UseWebApi(httpConfig);
+
         }
 
         private void ConfigureOAuthTokenGeneration(IAppBuilder app)
