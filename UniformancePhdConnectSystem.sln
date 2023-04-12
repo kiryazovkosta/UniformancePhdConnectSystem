@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31729.503
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniformancePhdConnectSystem.Web", "UniformancePhdConnectSystem.Web\UniformancePhdConnectSystem.Web.csproj", "{8C9E35D8-2842-47C9-9702-599D21131571}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniformancePhdConnectSystem.Models", "UniformancePhdConnectSystem.Models\UniformancePhdConnectSystem.Models.csproj", "{EF75CFA6-2FDE-4333-B811-B8070CF5E8AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniformancePhdConnectSystem.Data", "UniformancePhdConnectSystem.Data\UniformancePhdConnectSystem.Data.csproj", "{4590ED31-9B47-49C1-8CF3-66B4EDEF5DDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniformancePhdConnectSystem.WebApi", "UniformancePhdConnectSystem.WebApi\UniformancePhdConnectSystem.WebApi.csproj", "{C8A1F2EA-8745-4FB8-B2BB-071D09F47362}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +15,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8C9E35D8-2842-47C9-9702-599D21131571}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8C9E35D8-2842-47C9-9702-599D21131571}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8C9E35D8-2842-47C9-9702-599D21131571}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8C9E35D8-2842-47C9-9702-599D21131571}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EF75CFA6-2FDE-4333-B811-B8070CF5E8AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EF75CFA6-2FDE-4333-B811-B8070CF5E8AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF75CFA6-2FDE-4333-B811-B8070CF5E8AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,6 +23,10 @@ Global
 		{4590ED31-9B47-49C1-8CF3-66B4EDEF5DDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4590ED31-9B47-49C1-8CF3-66B4EDEF5DDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4590ED31-9B47-49C1-8CF3-66B4EDEF5DDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8A1F2EA-8745-4FB8-B2BB-071D09F47362}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8A1F2EA-8745-4FB8-B2BB-071D09F47362}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8A1F2EA-8745-4FB8-B2BB-071D09F47362}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8A1F2EA-8745-4FB8-B2BB-071D09F47362}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
