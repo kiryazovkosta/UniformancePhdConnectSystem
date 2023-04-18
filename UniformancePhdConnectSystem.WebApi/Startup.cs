@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json.Serialization;
 using Owin;
 using Serilog;
-using Swashbuckle.Application;
 using System.Linq;
 using System.Net.Http.Formatting;
 using System.Web.Http;
