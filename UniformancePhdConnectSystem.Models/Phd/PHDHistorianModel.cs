@@ -1,5 +1,6 @@
 ﻿namespace UniformancePhdConnectSystem.Models.Phd
 {
+    using System.Text;
     using UniformancePhdConnectSystem.Models.Enums;
 
     public class PHDHistorianModel
@@ -23,5 +24,21 @@
         public string StartTime { get; set; }
         public PhdReductionType ReductionType { get; set; }
         public uint SampleFrequency { get; set; }
+
+        public override string ToString()
+        {
+            StringBuilder output = new StringBuilder();
+            output.AppendLine($"\t\tPHD Server: {this.PHDServer.ToString()}");
+            output.AppendLine($"\t\tConnectionTimeout: {this.ConnectionTimeout}");
+            output.AppendLine($"\t\tStartTime: {this.StartTime}");
+            output.AppendLine($"\t\tEndTime: {this.EndTime}");
+            output.AppendLine($"\t\tMaximumRows: {this.MaximumRows}");
+            output.AppendLine($"\t\tMinimumConfidence: {this.MinimumConfidence}");
+            output.AppendLine($"\t\tOffset: {this.Offset}");
+            output.AppendLine($"\t\tSampletype: {this.Sampletype}");
+            output.AppendLine($"\t\tReductionType: {this.ReductionType}");
+            output.Append($"\t\tSampleFrequency: {this.SampleFrequency}");
+            return output.ToString();
+        }
     }
 }

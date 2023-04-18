@@ -4,6 +4,7 @@ using Serilog;
 using System.Linq;
 using System.Net.Http.Formatting;
 using System.Web.Http;
+using System.Web.Mvc;
 using UniformancePhdConnectSystem.Data;
 using UniformancePhdConnectSystem.WebApi.Data;
 
@@ -35,11 +36,6 @@ namespace UniformancePhdConnectSystem.WebApi
         private void ConfigureWebApi(HttpConfiguration config)
         {
             config.MapHttpAttributeRoutes();
-
-            config.Routes.MapHttpRoute(
-                "DefaultApi",
-                "api/{controller}/{id}",
-                new { id = RouteParameter.Optional });
 
             var jsonFormatter = config.Formatters.OfType<JsonMediaTypeFormatter>().First();
             jsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();

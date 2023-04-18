@@ -1,6 +1,7 @@
 ﻿namespace UniformancePhdConnectSystem.WebApi.Controllers
 {
     using Newtonsoft.Json;
+    using Serilog;
     using System;
     using System.Collections.Generic;
     using System.Data;
@@ -9,10 +10,13 @@
     using UniformancePhdConnectSystem.Models.Enums;
     using UniformancePhdConnectSystem.Models.Phd;
     using UniformancePhdConnectSystem.WebApi.Infrastructure;
+    using UniformancePhdConnectSystem.WebApi.Infrastructure.Extensions;
 
     [RoutePrefix("uniformance")]
     public class UniformanceController : ApiController
     {
+        private readonly ILogger logger = Log.ForContext<UniformanceController>();
+
         [HttpGet]
         [Route("get-put-data")]
         public IHttpActionResult GetPutData()
@@ -84,7 +88,8 @@
             }
             catch (PHDErrorException exception)
             {
-                return InternalServerError(exception);
+                this.logger.Error(exception, exception.Message);
+                return BadRequest(exception.Message);
             }
         }
 
@@ -92,6 +97,7 @@
         [Route("fetch")]
         public IHttpActionResult FetchPhdData([FromBody] FetchUniformancePhdData data)
         {
+            this.logger.Debug($"fetch: {data.ToString()}");
             try
             {
                 using (var phd = new PHDHistorian())
@@ -119,6 +125,8 @@
                     }
 
                     var fetchedData = phd.FetchRowData(tags, data.DSTCompensation, false);
+                    this.logger.Debug(fetchedData.Tables[0].Print());
+
                     var records = new List<FetchUniformancePhdDataRecord>();
                     foreach (DataRow dataRow in fetchedData.Tables[0].Rows)
                     {
@@ -133,6 +141,8 @@
                             Value = dataRow.IsNull("Value") ? null : dataRow["Value"]
                         };
 
+                        this.logger.Debug($"Record: {record.ToString()}");
+
                         records.Add(record);
                     }
 
@@ -141,7 +151,8 @@
             }
             catch (Exception ex) when (ex is PHDErrorException || ex is Exception)
             {
-                return InternalServerError(ex);
+                this.logger.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -181,7 +192,8 @@
             }
             catch (Exception ex) when (ex is PHDErrorException || ex is Exception)
             {
-                return InternalServerError(ex);
+                this.logger.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
             }
         }
 
