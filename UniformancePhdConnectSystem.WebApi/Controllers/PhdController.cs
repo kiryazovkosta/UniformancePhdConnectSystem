@@ -87,7 +87,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
 
         [HttpGet]
         [Route("rdi-info")]
-        public IHttpActionResult GetRDIInfo([FromUri] string host, [FromUri] string rdi)
+        public IHttpActionResult GetRDIInfo([FromUri] string host, string rdi)
         {
             try
             {
@@ -134,7 +134,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("db-info")]
+        [Route("c")]
         public IHttpActionResult GetDBInfo([FromUri] string host)
         {
             var response = new DbInfoData();
@@ -166,7 +166,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
 
         [HttpGet]
         [Route("browse-tags-list")]
-        public IHttpActionResult BrowsingTagsList([FromUri] string host, [FromUri] uint maxTagCount)
+        public IHttpActionResult BrowsingTagsList([FromUri] string host, uint maxTagCount)
         {
             try
             {
