@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Web.Http;
-using Uniformance.PHD;
-using UniformancePhdConnectSystem.Models.Phd;
-using UniformancePhdConnectSystem.WebApi.Infrastructure;
-
-namespace UniformancePhdConnectSystem.WebApi.Controllers
+﻿namespace UniformancePhdConnectSystem.WebApi.Controllers
 {
+    using Serilog;
+    using System;
+    using System.Data;
+    using System.Text;
+    using System.Web.Http;
+    using Uniformance.PHD;
+    using UniformancePhdConnectSystem.Models.Phd;
+    using UniformancePhdConnectSystem.WebApi.Infrastructure;
+
     [RoutePrefix("phd")]
     public class PhdController : ApiController
     {
+        private readonly ILogger logger = Log.ForContext<PhdController>();
+
         [HttpGet]
         [Route("tag-def")]
         public IHttpActionResult Get([FromUri] string host, string tag)
@@ -29,6 +28,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     };
 
                     var def = phd.TagDfn(tag);
+                    this.logger.Debug($"tag-def: {def}");
                     return Ok(def);
                 }
             }
@@ -39,7 +39,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("tag-data")]
+        [Route("get-tag-data")]
         public IHttpActionResult GetTagData([FromUri] string host, string tag)
         {
             try
@@ -53,6 +53,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
 
                     var tagDfn = phd.TagDfn(tag);
                     var tagData = Utility.GetPhdTagData(tagDfn.Tables[0].Rows[0]);
+                    this.logger.Debug($"get-tag-data: {tagData}");
                     return Ok(tagData);
                 }
             }
@@ -76,6 +77,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     };
 
                     var dateAsString = phd.ConvertToPHDTime(date);
+                    this.logger.Debug($"to-phd-time: {dateAsString}");
                     return Ok(dateAsString);
                 }
             }
@@ -86,7 +88,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("rdi-info")]
+        [Route("get-rdi-info")]
         public IHttpActionResult GetRDIInfo([FromUri] string host, string rdi)
         {
             try
@@ -99,6 +101,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     };
 
                     var result = phd.GetRDIInfo(rdi);
+                    this.logger.Debug($"get-rdi-info: {result}");
                     return Ok(result);
                 }
             }
@@ -125,6 +128,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     phd.RelativeToAbsolute(datetime, ref dtAbsolute, true);
                 }
 
+                this.logger.Debug($"rel-to-abs: {dtAbsolute}");
                 return Ok(dtAbsolute);
             }
             catch (PHDErrorException exception)
@@ -134,7 +138,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("c")]
+        [Route("get-db-info")]
         public IHttpActionResult GetDBInfo([FromUri] string host)
         {
             var response = new DbInfoData();
@@ -156,6 +160,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     response.UsingINTS = useInts;
                 }
 
+                this.logger.Debug($"get-db-info: {response}");
                 return Ok(response);
             }
             catch (PHDErrorException exception)
@@ -178,6 +183,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     };
 
                     var result = phd.BrowsingTagsList(maxTagCount, new TagFilter() { });
+                    this.logger.Debug($"browse-tags-list: {result}");
                     return Ok(result);
                 }
             }
@@ -188,7 +194,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("parent-tag-list")]
+        [Route("get-parent-tag-list")]
         public IHttpActionResult GetParentTagList([FromUri] string host)
         {
             try
@@ -201,6 +207,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     };
 
                     var result = phd.GetParentTagList();
+                    this.logger.Debug($"get-parent-tag-list: {result}");
                     return Ok(result);
                 }
             }
@@ -211,7 +218,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("link-list")]
+        [Route("get-link-list")]
         public IHttpActionResult GetLinkList([FromUri] string host)
         {
             try
@@ -224,6 +231,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     };
 
                     var result = phd.GetLinkList();
+                    this.logger.Debug($"get-link-list: {result}");
                     return Ok(result);
                 }
             }
@@ -234,7 +242,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("rdi-list")]
+        [Route("get-rdi-list")]
         public IHttpActionResult GetRDIList([FromUri] string host)
         {
             try
@@ -247,6 +255,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                     };
 
                     var result = phd.GetRDIList();
+                    this.logger.Debug($"get-link-list: {result}");
                     return Ok(result);
                 }
             }
@@ -281,6 +290,7 @@ namespace UniformancePhdConnectSystem.WebApi.Controllers
                         }
                     }
 
+                    this.logger.Debug($"put-list-data: {result.ToString()}");
                     return Ok(result.ToString());
                 }
             }
