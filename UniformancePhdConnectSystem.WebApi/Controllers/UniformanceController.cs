@@ -13,7 +13,7 @@
     using UniformancePhdConnectSystem.WebApi.Infrastructure.Attributes;
     using UniformancePhdConnectSystem.WebApi.Infrastructure.Extensions;
 
-    [LocalRequestOnly]
+    [Authorize]
     [RoutePrefix("uniformance")]
     public class UniformanceController : ApiController
     {
@@ -36,6 +36,7 @@
             return Ok(json);
         }
 
+        [AllowAnonymous]
         [HttpGet]
         [Route("get-fetch-data")]
         public IHttpActionResult GetFetchData()

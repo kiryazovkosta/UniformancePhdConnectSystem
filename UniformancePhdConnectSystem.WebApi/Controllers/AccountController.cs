@@ -8,6 +8,7 @@
     using UniformancePhdConnectSystem.Models.Identity;
     using UniformancePhdConnectSystem.WebApi.Models;
 
+    [Authorize]
     [RoutePrefix("accounts")]
     public class AccountController : BaseApiController
     {
@@ -72,6 +73,24 @@
             Uri locationHeader = new Uri(Url.Link("GetUserById", new { id = user.Id }));
 
             return Created(locationHeader, ModelFactory.Create(user));
+        }
+
+        [Route("ChangePassword")]
+        public async Task<IHttpActionResult> ChangePassword(ChangePasswordInputModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            IdentityResult result = await this.UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                return GetErrorResult(result);
+            }
+
+            return Ok();
         }
     }
 }

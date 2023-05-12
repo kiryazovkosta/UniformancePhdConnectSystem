@@ -9,6 +9,7 @@
     using UniformancePhdConnectSystem.Models.Phd;
     using UniformancePhdConnectSystem.WebApi.Infrastructure;
 
+    [Authorize]
     [RoutePrefix("phd")]
     public class PhdController : ApiController
     {
