@@ -64,7 +64,7 @@
         }
 
         [HttpGet]
-        [Route("to-phd-time")]
+        [Route("host")]
         public IHttpActionResult ConvertToPHDTime([FromUri] string host, DateTime date)
         {
             try

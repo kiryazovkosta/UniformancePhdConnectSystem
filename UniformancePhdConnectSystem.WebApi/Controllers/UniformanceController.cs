@@ -10,8 +10,10 @@
     using UniformancePhdConnectSystem.Models.Enums;
     using UniformancePhdConnectSystem.Models.Phd;
     using UniformancePhdConnectSystem.WebApi.Infrastructure;
+    using UniformancePhdConnectSystem.WebApi.Infrastructure.Attributes;
     using UniformancePhdConnectSystem.WebApi.Infrastructure.Extensions;
 
+    [LocalRequestOnly]
     [RoutePrefix("uniformance")]
     public class UniformanceController : ApiController
     {

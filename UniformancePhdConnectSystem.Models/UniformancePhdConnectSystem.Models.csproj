@@ -63,6 +63,8 @@
     <Compile Include="Enums\PhdSampleType.cs" />
     <Compile Include="Enums\PhdServerVersionType.cs" />
     <Compile Include="Identity\ApplicationUser.cs" />
+    <Compile Include="Identity\CreateUserModel.cs" />
+    <Compile Include="Identity\UserViewModel.cs" />
     <Compile Include="Phd\DbInfoData.cs" />
     <Compile Include="Phd\FetchUniformancePhdData.cs" />
     <Compile Include="Phd\FetchUniformancePhdDataRecord.cs" />
