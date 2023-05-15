@@ -11,6 +11,7 @@
     {
         private ModelFactory modelFactory;
         private ApplicationUserManager userManager = null;
+        private ApplicationRoleManager roleManager= null;
 
         public BaseApiController()
         {
@@ -19,6 +20,9 @@
 
         protected ApplicationUserManager UserManager => 
             userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
+
+        protected ApplicationRoleManager RoleManager =>
+            roleManager ?? Request.GetOwinContext().GetUserManager<ApplicationRoleManager>();
 
         protected ModelFactory ModelFactory
         {

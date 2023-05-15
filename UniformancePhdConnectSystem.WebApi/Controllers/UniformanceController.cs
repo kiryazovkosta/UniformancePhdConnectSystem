@@ -10,15 +10,15 @@
     using UniformancePhdConnectSystem.Models.Enums;
     using UniformancePhdConnectSystem.Models.Phd;
     using UniformancePhdConnectSystem.WebApi.Infrastructure;
-    using UniformancePhdConnectSystem.WebApi.Infrastructure.Attributes;
     using UniformancePhdConnectSystem.WebApi.Infrastructure.Extensions;
 
-    [Authorize]
+    [Authorize(Roles ="Admin,PhdUser")]
     [RoutePrefix("uniformance")]
-    public class UniformanceController : ApiController
+    public class UniformanceController : BaseApiController
     {
         private readonly ILogger logger = Log.ForContext<UniformanceController>();
 
+        [AllowAnonymous]
         [HttpGet]
         [Route("get-put-data")]
         public IHttpActionResult GetPutData()

@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationDbContext.cs" />
+    <Compile Include="ApplicationRoleManager.cs" />
     <Compile Include="ApplicationUserManager.cs" />
     <Compile Include="Migrations\202304111008246_InitialSetup.cs" />
     <Compile Include="Migrations\202304111008246_InitialSetup.designer.cs">
