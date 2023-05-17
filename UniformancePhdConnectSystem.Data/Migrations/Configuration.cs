@@ -18,11 +18,15 @@
         {
             if (!context.Set<ApplicationUser>().Any())
             {
-                var manager = new UserManager<ApplicationUser>(
+                var userManager = new UserManager<ApplicationUser>(
                     new UserStore<ApplicationUser>(
                         new ApplicationDbContext()));
 
-                var user = new ApplicationUser
+                var roleManager = new RoleManager<IdentityRole>
+                    (new RoleStore<IdentityRole>(
+                        new ApplicationDbContext()));
+
+                var rootUser = new ApplicationUser
                 {
                     UserName = "root",
                     Email = "kosta.kiryazov@ensicontrol.eu",
@@ -31,7 +35,29 @@
                     LastName = "Kiryazov" 
                 };
 
-                manager.Create(user, "M!P@ssW0rd");
+                var fetchUser = new ApplicationUser
+                {
+                    UserName = "fetcher",
+                    Email = "phd-fetch@ensicontrol.eu",
+                    EmailConfirmed = true,
+                    FirstName = "System",
+                    LastName = "Fetcher"
+                };
+
+                userManager.Create(rootUser, "M!P@ssW0rd1s");
+                userManager.Create(fetchUser, "iW1LFet4UphdD@t@z3_#");
+
+                if (!roleManager.Roles.Any())
+                {
+                    roleManager.Create(new IdentityRole { Name = "Admin" });
+                    roleManager.Create(new IdentityRole { Name = "PhdUser" });
+                }
+
+                var adminUser = userManager.FindByName("root");
+                userManager.AddToRole(adminUser.Id, "Admin");
+
+                var phdUser = userManager.FindByName("fetcher");
+                userManager.AddToRole(phdUser.Id, "PhdUser");
             }
         }
     }

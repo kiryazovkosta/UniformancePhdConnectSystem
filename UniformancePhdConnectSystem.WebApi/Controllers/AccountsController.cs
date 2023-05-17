@@ -10,14 +10,16 @@
 
     [Authorize]
     [RoutePrefix("accounts")]
-    public class AccountController : BaseApiController
+    public class AccountsController : BaseApiController
     {
+        [Authorize(Roles="Admin")]
         [Route("users")]
         public IHttpActionResult GetUsers()
         {
             return Ok(this.UserManager.Users.ToList().Select(u => this.ModelFactory.Create(u)));
         }
 
+        [Authorize(Roles="Admin")]
         [Route("user/{id:guid}", Name = "GetUserById")]
         public async Task<IHttpActionResult> GetUser(string Id)
         {
@@ -32,6 +34,7 @@
 
         }
 
+        [Authorize(Roles="Admin")]
         [Route("user/{username}")]
         public async Task<IHttpActionResult> GetUserByName(string username)
         {
@@ -46,6 +49,7 @@
 
         }
 
+        [Authorize(Roles = "Admin")]
         [Route("create")]
         public async Task<IHttpActionResult> CreateUser(CreateUserModel createUserModel)
         {
@@ -88,6 +92,49 @@
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
+            }
+
+            return Ok();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [Route("user/{id:guid}/roles")]
+        [HttpPut]
+        public async Task<IHttpActionResult> AssignRolesToUser([FromUri] string id, [FromBody] string[] rolesToAssign)
+        {
+
+            var appUser = await this.UserManager.FindByIdAsync(id);
+
+            if (appUser == null)
+            {
+                return NotFound();
+            }
+
+            var currentRoles = await this.UserManager.GetRolesAsync(appUser.Id);
+
+            var rolesNotExists = rolesToAssign.Except(this.RoleManager.Roles.Select(x => x.Name)).ToArray();
+
+            if (rolesNotExists.Count() > 0)
+            {
+
+                ModelState.AddModelError("", string.Format("Roles '{0}' does not exixts in the system", string.Join(",", rolesNotExists)));
+                return BadRequest(ModelState);
+            }
+
+            IdentityResult removeResult = await this.UserManager.RemoveFromRolesAsync(appUser.Id, currentRoles.ToArray());
+
+            if (!removeResult.Succeeded)
+            {
+                ModelState.AddModelError("", "Failed to remove user roles");
+                return BadRequest(ModelState);
+            }
+
+            IdentityResult addResult = await this.UserManager.AddToRolesAsync(appUser.Id, rolesToAssign);
+
+            if (!addResult.Succeeded)
+            {
+                ModelState.AddModelError("", "Failed to add user roles");
+                return BadRequest(ModelState);
             }
 
             return Ok();

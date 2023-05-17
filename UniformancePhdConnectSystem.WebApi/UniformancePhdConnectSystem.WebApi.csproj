@@ -225,10 +225,11 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\AccountsController.cs" />
     <Compile Include="Controllers\BaseApiController.cs" />
     <Compile Include="Controllers\DefaultController.cs" />
     <Compile Include="Controllers\PhdController.cs" />
+    <Compile Include="Controllers\RolesController.cs" />
     <Compile Include="Controllers\UniformanceController.cs" />
     <Compile Include="Infrastructure\Attributes\LocalRequestOnlyAttribute.cs" />
     <Compile Include="Infrastructure\Extensions\DataTableExtensions.cs" />

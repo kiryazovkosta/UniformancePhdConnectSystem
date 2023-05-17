@@ -64,7 +64,10 @@
     <Compile Include="Enums\PhdServerVersionType.cs" />
     <Compile Include="Identity\ApplicationUser.cs" />
     <Compile Include="Identity\ChangePasswordInputModel.cs" />
+    <Compile Include="Identity\CreateRoleModel.cs" />
     <Compile Include="Identity\CreateUserModel.cs" />
+    <Compile Include="Identity\RoleViewModel.cs" />
+    <Compile Include="Identity\UsersInRoleModel.cs" />
     <Compile Include="Identity\UserViewModel.cs" />
     <Compile Include="Phd\DbInfoData.cs" />
     <Compile Include="Phd\FetchUniformancePhdData.cs" />

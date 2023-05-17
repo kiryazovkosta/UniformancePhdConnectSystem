@@ -1,5 +1,6 @@
 ﻿namespace UniformancePhdConnectSystem.WebApi.Models
 {
+    using Microsoft.AspNet.Identity.EntityFramework;
     using System.Net.Http;
     using System.Web.Http.Routing;
     using UniformancePhdConnectSystem.Data;
@@ -28,6 +29,17 @@
                 EmailConfirmed = appUser.EmailConfirmed,
                 Roles = userManager.GetRolesAsync(appUser.Id).Result,
                 Claims = userManager.GetClaimsAsync(appUser.Id).Result
+            };
+        }
+
+        public RoleViewModel Create(IdentityRole appRole)
+        {
+
+            return new RoleViewModel
+            {
+                Url = urlHelper.Link("GetRoleById", new { id = appRole.Id }),
+                Id = appRole.Id,
+                Name = appRole.Name
             };
         }
     }
