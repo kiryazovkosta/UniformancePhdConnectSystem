@@ -44,10 +44,10 @@ namespace UniformancePhdConnectSystem.WebApi
 
             OAuthAuthorizationServerOptions OAuthServerOptions = new OAuthAuthorizationServerOptions()
             {
-                //For Dev enviroment only (on production should be AllowInsecureHttp = false)
-                AllowInsecureHttp = true,
+                AllowInsecureHttp = false,
                 TokenEndpointPath = new PathString("/oauth/token"),
-                AccessTokenExpireTimeSpan = TimeSpan.FromMinutes(15),
+                AccessTokenExpireTimeSpan = 
+                    TimeSpan.FromMinutes(double.Parse(ConfigurationManager.AppSettings["as:Timeout"])),
                 Provider = new CustomOAuthProvider(),
                 AccessTokenFormat = new CustomJwtFormat(ConfigurationManager.AppSettings["as:BaseUrl"])
             };

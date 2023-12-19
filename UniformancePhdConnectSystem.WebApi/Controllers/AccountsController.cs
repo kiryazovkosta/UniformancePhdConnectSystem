@@ -9,7 +9,7 @@
     using UniformancePhdConnectSystem.WebApi.Models;
 
     [Authorize]
-    [RoutePrefix("accounts")]
+    [RoutePrefix("api/accounts")]
     public class AccountsController : BaseApiController
     {
         [Authorize(Roles="Admin")]
@@ -114,10 +114,11 @@
 
             var rolesNotExists = rolesToAssign.Except(this.RoleManager.Roles.Select(x => x.Name)).ToArray();
 
-            if (rolesNotExists.Count() > 0)
+            if (rolesNotExists.Any())
             {
 
-                ModelState.AddModelError("", string.Format("Roles '{0}' does not exixts in the system", string.Join(",", rolesNotExists)));
+                ModelState.AddModelError("",
+                    $"Roles '{string.Join(",", rolesNotExists)}' does not exixts in the system");
                 return BadRequest(ModelState);
             }
 

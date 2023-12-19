@@ -28,8 +28,11 @@
             string symmetricKeyAsBase64 = ConfigurationManager.AppSettings["as:AudienceSecret"];
             var keyByteArray = TextEncodings.Base64Url.Decode(symmetricKeyAsBase64);
             //var signingKey = new HmacSigningCredentials(keyByteArray);
-            var issued = data.Properties.IssuedUtc;
-            var expires = data.Properties.ExpiresUtc;
+            DateTimeOffset? issued = data.Properties.IssuedUtc ?? 
+                         DateTime.UtcNow;
+            DateTimeOffset? expires = data.Properties.ExpiresUtc ??
+                                      DateTime.UtcNow.AddMinutes(
+                                          double.Parse(ConfigurationManager.AppSettings["as:Timeout"]));
             var securityKey = new SymmetricSecurityKey(keyByteArray);
             var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
 

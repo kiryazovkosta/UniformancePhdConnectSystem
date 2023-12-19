@@ -10,7 +10,7 @@
     using UniformancePhdConnectSystem.WebApi.Infrastructure;
 
     [Authorize]
-    [RoutePrefix("phd")]
+    [RoutePrefix("api/phd")]
     public class PhdController : ApiController
     {
         private readonly ILogger logger = Log.ForContext<PhdController>();

@@ -8,7 +8,7 @@
     using UniformancePhdConnectSystem.Models.Identity;
 
     [Authorize(Roles= "Admin")]
-    [RoutePrefix("roles")]
+    [RoutePrefix("api/roles")]
     public class RolesController : BaseApiController
     {
         [Route("{id:guid}", Name = "GetRoleById")]

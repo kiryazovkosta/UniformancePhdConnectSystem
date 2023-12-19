@@ -4,8 +4,14 @@
     using Serilog;
     using System;
     using System.Collections.Generic;
+    using System.Configuration;
     using System.Data;
+    using System.Security.Claims;
+    using System.Threading.Tasks;
     using System.Web.Http;
+    using Microsoft.Owin.Security;
+    using Models;
+    using Providers;
     using Uniformance.PHD;
     using UniformancePhdConnectSystem.Models.Enums;
     using UniformancePhdConnectSystem.Models.Phd;
@@ -13,7 +19,7 @@
     using UniformancePhdConnectSystem.WebApi.Infrastructure.Extensions;
 
     [Authorize(Roles ="Admin,PhdUser")]
-    [RoutePrefix("uniformance")]
+    [RoutePrefix("api/uniformance")]
     public class UniformanceController : BaseApiController
     {
         private readonly ILogger logger = Log.ForContext<UniformanceController>();
@@ -98,11 +104,18 @@
 
         [HttpPost]
         [Route("fetch")]
-        public IHttpActionResult FetchPhdData([FromBody] FetchUniformancePhdData data)
+        public async Task<IHttpActionResult> FetchPhdData([FromBody] FetchUniformancePhdData data)
         {
-            this.logger.Debug($"fetch: {data.ToString()}");
+            this.logger.Debug($"Begin processing of request: {data.ToString()}");
             try
             {
+                var jwt = new CustomJwtFormat(ConfigurationManager.AppSettings["as:BaseUrl"]);
+                
+                ApplicationUser user = await this.UserManager.FindAsync("root", "M!P@ssW0rd1s");
+                ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(this.UserManager, "JWT");
+                var ticket = new AuthenticationTicket(oAuthIdentity, null);
+                var token = jwt.Protect(ticket);
+
                 using (var phd = new PHDHistorian())
                 {
                     phd.DefaultServer = new PHDServer(data.PhdHistorian.PHDServer.HostName,
@@ -143,13 +156,14 @@
                                 : Convert.ToDateTime(dataRow["Timestamp"]),
                             Value = dataRow.IsNull("Value") ? null : dataRow["Value"]
                         };
-
-                        this.logger.Debug($"Record: {record.ToString()}");
-
+                        
                         records.Add(record);
                     }
-
-                    return Ok(records);
+                    
+                    this.logger.Debug($"End processing of request: {records.Count}");
+                    var response = new FetchUniformancePhdResponse() { IsSuccess = true, JwtToken = token };
+                    response.AddRecords(records);
+                    return Ok(response);
                 }
             }
             catch (Exception ex) when (ex is PHDErrorException || ex is Exception)

@@ -72,6 +72,7 @@
     <Compile Include="Phd\DbInfoData.cs" />
     <Compile Include="Phd\FetchUniformancePhdData.cs" />
     <Compile Include="Phd\FetchUniformancePhdDataRecord.cs" />
+    <Compile Include="Phd\FetchUniformancePhdResponse.cs" />
     <Compile Include="Phd\PHDHistorianModel.cs" />
     <Compile Include="Phd\PHDServerModel.cs" />
     <Compile Include="Phd\PutUniformancePhdData.cs" />
