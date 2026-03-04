@@ -6,10 +6,8 @@
     using System.Collections.Generic;
     using System.Configuration;
     using System.Data;
-    using System.Security.Claims;
     using System.Threading.Tasks;
     using System.Web.Http;
-    using Microsoft.Owin.Security;
     using Models;
     using Providers;
     using Uniformance.PHD;
@@ -17,6 +15,7 @@
     using UniformancePhdConnectSystem.Models.Phd;
     using UniformancePhdConnectSystem.WebApi.Infrastructure;
     using UniformancePhdConnectSystem.WebApi.Infrastructure.Extensions;
+    using System.Linq;
 
     [Authorize(Roles ="Admin,PhdUser")]
     [RoutePrefix("api/uniformance")]
@@ -64,65 +63,85 @@
         [Route("put")]
         public IHttpActionResult PutPhdData([FromBody] PutUniformancePhdData data)
         {
-            try
+            if (data == null || data.Records == null || data.Records.Count < 1)
             {
-                var records = 0;
+                this.logger.Warning("PutPhdData called with invalid tag count.");
+                return BadRequest("Exactly one tag is required.");
+            }
 
-                using (var phd = new PHDHistorian())
+            var phdProvider = UniformancePhdProvider.Instance;
+            lock (phdProvider.SyncLock)
+            {
+                var phd = phdProvider.GlobalHistorian;
+                try
                 {
-                    phd.DefaultServer = new PHDServer(data.PhdHistorian.PHDServer.HostName, (SERVERVERSION)data.PhdHistorian.PHDServer.APIVersion)
+                    if (phd == null)
                     {
-                        Port = data.PhdHistorian.PHDServer.Port
-                    };
+                        this.logger.Error("PHD Global Historian is null. Initialization in Startup.cs failed.");
+                        return InternalServerError(new Exception("PHD Connection is not available."));
+                    }
+
+                    var records = 0;
                     phd.Sampletype = (SAMPLETYPE)data.PhdHistorian.Sampletype;
                     phd.ReductionType = (REDUCTIONTYPE)data.PhdHistorian.ReductionType;
                     phd.SampleFrequency = data.PhdHistorian.SampleFrequency;
                     foreach (var record in data.Records)
                     {
                         var tag = new Tag(record.TagName);
-                        var tagDfn = phd.TagDfn(tag.TagName);
-                        var tagData = Utility.GetPhdTagData(tagDfn.Tables[0].Rows[0]);
-                        try
+                        TagData tagData;
+                        using (var tagDfn = phd.TagDfn(tag.TagName))
                         {
-                            phd.PutData(tag, record.Value, record.TimeStamp, record.Confidence, tagData.Units);
-                            records++;
+                            tagData = Utility.GetPhdTagData(tagDfn.Tables[0].Rows[0]);
                         }
-                        catch (PHDErrorException)
-                        {
-                        }
+                        
+                        phd.PutData(tag, record.Value, record.TimeStamp, record.Confidence, tagData.Units);
+                        records++;
                     }
-                }
 
-                return Ok(records == data.Records.Count);
-            }
-            catch (PHDErrorException exception)
-            {
-                this.logger.Error(exception, exception.Message);
-                return BadRequest(exception.Message);
+                    return Ok(records == data.Records.Count);
+                }
+                catch (PHDErrorException phdEx)
+                {
+                    this.logger.Error(phdEx, "PHD SDK Error [PutPhdData]: {Tags}", string.Join(";", data.Records.Select(r => r.TagName)));
+                    return BadRequest($"PHD Error: {phdEx.Message}");
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Error(ex, "General exception in [PutPhdData] for tags: {Tags}", string.Join(";", string.Join(";", data.Records.Select(r => r.TagName))));
+                    return InternalServerError(ex);
+                }
+                finally
+                {
+                }
             }
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("fetch")]
-        public async Task<IHttpActionResult> FetchPhdData([FromBody] FetchUniformancePhdData data)
+        public IHttpActionResult FetchPhdData([FromBody] FetchUniformancePhdData data)
         {
-            this.logger.Debug($"Begin processing of request: {data.ToString()}");
-            try
+            if (data == null || data.Tags == null || data.Tags.Count < 1)
             {
-                var jwt = new CustomJwtFormat(ConfigurationManager.AppSettings["as:BaseUrl"]);
-                
-                ApplicationUser user = await this.UserManager.FindAsync("root", "M!P@ssW0rd1s");
-                ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(this.UserManager, "JWT");
-                var ticket = new AuthenticationTicket(oAuthIdentity, null);
-                var token = jwt.Protect(ticket);
+                this.logger.Warning("FetchSinglePhdData called with invalid tag count.");
+                return BadRequest("One or more tags are required.");
+            }
 
-                using (var phd = new PHDHistorian())
+            var phdProvider = UniformancePhdProvider.Instance;
+            DataSet fetchedData = null;
+            Tags tags = null;
+
+            lock (phdProvider.SyncLock)
+            {
+                var phd = phdProvider.GlobalHistorian;
+                try
                 {
-                    phd.DefaultServer = new PHDServer(data.PhdHistorian.PHDServer.HostName,
-                        (SERVERVERSION)data.PhdHistorian.PHDServer.APIVersion)
+                    if (phd == null)
                     {
-                        Port = data.PhdHistorian.PHDServer.Port
-                    };
+                        this.logger.Error("PHD Global Historian is null. Initialization in Startup.cs failed.");
+                        return InternalServerError(new Exception("PHD Connection is not available."));
+                    }
+
                     phd.Sampletype = (SAMPLETYPE)data.PhdHistorian.Sampletype;
                     phd.ReductionType = (REDUCTIONTYPE)data.PhdHistorian.ReductionType;
                     phd.StartTime = data.PhdHistorian.StartTime;
@@ -134,14 +153,12 @@
                         phd.SampleFrequency = data.PhdHistorian.SampleFrequency;
                     }
 
-                    var tags = new Tags();
+                    tags = new Tags();
                     foreach (var tagName in data.Tags)
                     {
                         tags.Add(new Tag(tagName));
                     }
-
-                    var fetchedData = phd.FetchRowData(tags, data.DSTCompensation, false);
-                    this.logger.Debug(fetchedData.Tables[0].Print());
+                    fetchedData = phd.FetchRowData(tags, data.DSTCompensation, false);
 
                     var records = new List<FetchUniformancePhdDataRecord>();
                     foreach (DataRow dataRow in fetchedData.Tables[0].Rows)
@@ -151,25 +168,53 @@
                             Confidence = dataRow.IsNull("Confidence") ? 0 : Convert.ToInt32(dataRow["Confidence"]),
                             TagName = dataRow.IsNull("TagName") ? null : Convert.ToString(dataRow["TagName"]),
                             HostName = dataRow.IsNull("HostName") ? null : Convert.ToString(dataRow["HostName"]),
-                            TimeStamp = dataRow.IsNull("Timestamp")
-                                ? DateTime.MinValue
-                                : Convert.ToDateTime(dataRow["Timestamp"]),
+                            TimeStamp = dataRow.IsNull("Timestamp") ? DateTime.MinValue : Convert.ToDateTime(dataRow["Timestamp"]),
                             Value = dataRow.IsNull("Value") ? null : dataRow["Value"]
                         };
-                        
+
                         records.Add(record);
                     }
-                    
+
                     this.logger.Debug($"End processing of request: {records.Count}");
-                    var response = new FetchUniformancePhdResponse() { IsSuccess = true, JwtToken = token };
+                    var response = new FetchUniformancePhdResponse() { IsSuccess = true };
                     response.AddRecords(records);
                     return Ok(response);
                 }
-            }
-            catch (Exception ex) when (ex is PHDErrorException || ex is Exception)
-            {
-                this.logger.Error(ex, ex.Message);
-                return BadRequest(ex.Message);
+                catch (PHDErrorException phdEx)
+                {
+                    this.logger.Error(phdEx, "PHD SDK Error [FetchPhdData]: {Tags}", string.Join(";", data.Tags));
+                    return BadRequest($"PHD Error: {phdEx.Message}");
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Error(ex, "General exception in [FetchPhdData] for tags: {Tags}", string.Join(";", data.Tags));
+                    return InternalServerError(ex);
+                }
+                finally
+                {
+                    if (tags != null)
+                    {
+                        tags.RemoveAll();
+                        tags = null;
+                    }
+
+                    if (fetchedData != null)
+                    {
+                        try
+                        {
+                            fetchedData.Tables.Clear();
+                            fetchedData.Dispose();
+                        }
+                        catch (Exception disposeEx)
+                        {
+                            this.logger.Error(disposeEx, "Error disposing PHD DataSet.");
+                        }
+                        finally
+                        {
+                            fetchedData = null;
+                        }
+                    }
+                }
             }
         }
 
@@ -177,67 +222,86 @@
         [Route("fetch-single")]
         public IHttpActionResult FetchSinglePhdData([FromBody] FetchUniformancePhdData data)
         {
-            if (data.Tags.Count != 1)
+            if (data == null || data.Tags == null || data.Tags.Count != 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(data.Tags));
+                this.logger.Warning("FetchSinglePhdData called with invalid tag count.");
+                return BadRequest("Exactly one tag is required.");
             }
 
-            try
+            var phdProvider = UniformancePhdProvider.Instance;
+            DataSet fetchedData = null;
+            Tags tags = null;
+
+            lock (phdProvider.SyncLock)
             {
-                using (var phd = new PHDHistorian())
+                var phd = phdProvider.GlobalHistorian;
+                try
                 {
-                    phd.DefaultServer = new PHDServer(data.PhdHistorian.PHDServer.HostName, (SERVERVERSION)data.PhdHistorian.PHDServer.APIVersion)
+                    if (phd == null)
                     {
-                        Port = data.PhdHistorian.PHDServer.Port
-                    };
+                        this.logger.Error("PHD Global Historian is null. Initialization in Startup.cs failed.");
+                        return InternalServerError(new Exception("PHD Connection is not available."));
+                    }
+
                     phd.Sampletype = (SAMPLETYPE)data.PhdHistorian.Sampletype;
                     phd.ReductionType = (REDUCTIONTYPE)data.PhdHistorian.ReductionType;
                     phd.StartTime = data.PhdHistorian.StartTime;
                     phd.EndTime = data.PhdHistorian.EndTime;
-                    phd.ConnectionTimeout = (uint)data.PhdHistorian.ConnectionTimeout;
-
-                    var tags = new Tags();
-                    foreach (var tagName in data.Tags)
+                    if (data.PhdHistorian.ConnectionTimeout > 0)
                     {
-                        tags.Add(new Tag(tagName));
+                        phd.ConnectionTimeout = (uint)data.PhdHistorian.ConnectionTimeout;
                     }
 
-                    var fetchedData = phd.FetchRowData(tags, data.DSTCompensation, false);
-                    var record = fetchedData.Tables[0].Rows[0]["Value"];
-                    return Ok(record);
-                }
-            }
-            catch (Exception ex) when (ex is PHDErrorException || ex is Exception)
-            {
-                this.logger.Error(ex, ex.Message);
-                return BadRequest(ex.Message);
-            }
-        }
+                    tags = new Tags();
+                    tags.Add(new Tag(data.Tags.First().ToString()));
+                    fetchedData = phd.FetchRowData(tags, data.DSTCompensation, false);
 
-        private IEnumerable<FetchUniformancePhdDataRecord> DataTableToFetchDataRecords(DataTable dataTable)
-        {
-            var records = new List<FetchUniformancePhdDataRecord>();
-            try
-            {
-                foreach (DataRow dataRow in dataTable.Rows)
-                {
-                    var record = new FetchUniformancePhdDataRecord()
+                    if (fetchedData != null && fetchedData.Tables.Count > 0 && fetchedData.Tables[0].Rows.Count > 0)
                     {
-                        Confidence = dataRow.IsNull("Confidence") ? 0 : Convert.ToInt32(dataRow["Confidence"]),
-                        TagName = dataRow.IsNull("TagName") ? null : Convert.ToString(dataRow["TagName"]),
-                        HostName = dataRow.IsNull("HostName") ? null : Convert.ToString(dataRow["HostName"]),
-                        TimeStamp = dataRow.IsNull("Timestamp") ? DateTime.MinValue : Convert.ToDateTime(dataRow["Timestamp"]),
-                        Value = dataRow.IsNull("Value") ? null : dataRow["Value"]
-                    };
+                        var row = fetchedData.Tables[0].Rows[0];
+                        var value = row.IsNull("Value") ? null : row["Value"];
+                        return Ok(value);
+                    }
 
-                    records.Add(record);
+                    this.logger.Error("No data found for tag: {Tag}", data.Tags.First());
+                    return NotFound();
+                }
+                catch (PHDErrorException phdEx)
+                {
+                    this.logger.Error(phdEx, "PHD SDK Error [FetchSinglePhdData]: {Tag}", data.Tags.First());
+                    return BadRequest($"PHD Error: {phdEx.Message}");
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Error(ex, "General exception in [FetchSinglePhdData] for tag: {Tag}", data.Tags.First());
+                    return InternalServerError(ex);
+                }
+                finally
+                {
+                    if (tags != null)
+                    {
+                        tags.RemoveAll();
+                        tags = null;
+                    }
+
+                    if (fetchedData != null)
+                    {
+                        try
+                        {
+                            fetchedData.Tables.Clear();
+                            fetchedData.Dispose();
+                        }
+                        catch (Exception disposeEx)
+                        {
+                            this.logger.Error(disposeEx, "Error disposing PHD DataSet.");
+                        }
+                        finally
+                        {
+                            fetchedData = null;
+                        }
+                    }
                 }
             }
-            catch (Exception)
-            {
-            }
-
-            return records;
         }
     }
 }

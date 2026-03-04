@@ -10,6 +10,8 @@
 
     public class CustomJwtFormat : ISecureDataFormat<AuthenticationTicket>
     {
+        private static readonly JwtSecurityTokenHandler TokenHandler = new JwtSecurityTokenHandler();
+
         private readonly string issuer = string.Empty;
 
         public CustomJwtFormat(string issuer)
@@ -43,9 +45,7 @@
                 issued.Value.UtcDateTime, 
                 expires.Value.UtcDateTime,
                 signingCredentials);
-            var handler = new JwtSecurityTokenHandler();
-
-            var jwt = handler.WriteToken(token);
+            var jwt = TokenHandler.WriteToken(token);
             return jwt;
         }
 

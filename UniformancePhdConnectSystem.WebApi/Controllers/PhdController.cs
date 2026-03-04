@@ -8,6 +8,7 @@
     using Uniformance.PHD;
     using UniformancePhdConnectSystem.Models.Phd;
     using UniformancePhdConnectSystem.WebApi.Infrastructure;
+    using UniformancePhdConnectSystem.WebApi.Providers;
 
     [Authorize]
     [RoutePrefix("api/phd")]
@@ -19,23 +20,38 @@
         [Route("tag-def")]
         public IHttpActionResult Get([FromUri] string host, string tag)
         {
-            try
+            var phdProvider = UniformancePhdProvider.Instance;
+            lock (phdProvider.SyncLock)
             {
-                using (var phd = new PHDHistorian())
+                var phd = phdProvider.GlobalHistorian;
+                try
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
+                    if (phd == null)
                     {
-                        Port = 3100
-                    };
+                        this.logger.Error("PHD Global Historian is null. Initialization in Startup.cs failed.");
+                        return InternalServerError(new Exception("PHD Connection is not available."));
+                    }
 
-                    var def = phd.TagDfn(tag);
-                    this.logger.Debug($"tag-def: {def}");
-                    return Ok(def);
+                    phd.DefaultServer.HostName = host;
+                    TagData tagData ;
+                    using (var def = phd.TagDfn(tag))
+                    {
+                        tagData = Utility.GetPhdTagData(def.Tables[0].Rows[0]);
+                    }
+
+                    this.logger.Debug($"tag-def: {tagData}");
+                    return Ok(tagData);
                 }
-            }
-            catch (PHDErrorException exception)
-            {
-                return InternalServerError(exception);
+                catch (PHDErrorException phdEx)
+                {
+                    this.logger.Error(phdEx, "PHD SDK Error [tag-def]: {Tag}", tag);
+                    return BadRequest($"PHD Error: {phdEx.Message}");
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Error(ex, "General exception in [tag-def] for tags: {Tag}", tag);
+                    return InternalServerError(ex);
+                }
             }
         }
 
@@ -45,15 +61,17 @@
         {
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
-                    var tagDfn = phd.TagDfn(tag);
-                    var tagData = Utility.GetPhdTagData(tagDfn.Tables[0].Rows[0]);
+                    TagData tagData;
+                    using (var tagDfn = phd.TagDfn(tag))
+                    {
+                        tagData = Utility.GetPhdTagData(tagDfn.Tables[0].Rows[0]);
+                    }
+
                     this.logger.Debug($"get-tag-data: {tagData}");
                     return Ok(tagData);
                 }
@@ -70,12 +88,10 @@
         {
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
                     var dateAsString = phd.ConvertToPHDTime(date);
                     this.logger.Debug($"to-phd-time: {dateAsString}");
@@ -94,12 +110,10 @@
         {
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
                     var result = phd.GetRDIInfo(rdi);
                     this.logger.Debug($"get-rdi-info: {result}");
@@ -119,12 +133,10 @@
             var dtAbsolute = new DateTime();
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
                     phd.RelativeToAbsolute(datetime, ref dtAbsolute, true);
                 }
@@ -145,12 +157,10 @@
             var response = new DbInfoData();
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
                     var dBMProvider = string.Empty;
                     var dBMDataSource = string.Empty;
@@ -176,12 +186,10 @@
         {
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
                     var result = phd.BrowsingTagsList(maxTagCount, new TagFilter() { });
                     this.logger.Debug($"browse-tags-list: {result}");
@@ -200,12 +208,10 @@
         {
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
                     var result = phd.GetParentTagList();
                     this.logger.Debug($"get-parent-tag-list: {result}");
@@ -224,12 +230,10 @@
         {
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
                     var result = phd.GetLinkList();
                     this.logger.Debug($"get-link-list: {result}");
@@ -248,12 +252,10 @@
         {
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
                     var result = phd.GetRDIList();
                     this.logger.Debug($"get-link-list: {result}");
@@ -272,22 +274,21 @@
         {
             try
             {
+                using (var server = new PHDServer(host, SERVERVERSION.API200) { Port = 3100 })
                 using (var phd = new PHDHistorian())
                 {
-                    phd.DefaultServer = new PHDServer(host, SERVERVERSION.API200)
-                    {
-                        Port = 3100
-                    };
+                    phd.DefaultServer = server;
 
-                    var table = phd.DefaultServer.PutListDataTable;
                     var result = new StringBuilder();
-
-                    foreach (DataRow row in table.Rows)
+                    using (var table = phd.DefaultServer.PutListDataTable)
                     {
-                        result.AppendLine("--- Row ---");
-                        foreach (var item in row.ItemArray)
+                        foreach (DataRow row in table.Rows)
                         {
-                            result.AppendLine($"Item: {item}");
+                            result.AppendLine("--- Row ---");
+                            foreach (var item in row.ItemArray)
+                            {
+                                result.AppendLine($"Item: {item}");
+                            }
                         }
                     }
 

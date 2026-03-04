@@ -27,8 +27,8 @@
                 FullName = string.Format("{0} {1}", appUser.FirstName, appUser.LastName),
                 Email = appUser.Email,
                 EmailConfirmed = appUser.EmailConfirmed,
-                Roles = userManager.GetRolesAsync(appUser.Id).Result,
-                Claims = userManager.GetClaimsAsync(appUser.Id).Result
+                Roles = userManager.GetRolesAsync(appUser.Id).ConfigureAwait(false).GetAwaiter().GetResult(),
+                Claims = userManager.GetClaimsAsync(appUser.Id).ConfigureAwait(false).GetAwaiter().GetResult()
             };
         }
 
